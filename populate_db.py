@@ -51,13 +51,12 @@ def ingest_node(area_id, levels, conn, p_lat=None, p_lng=None):
                 h[3] if len(h) > 3 else None, # Rock
                 climb['name'],
                 grade,
-                climb.get('content', {}).get('description', ""),
                 current_lat, current_lng
             )
             cursor.execute("""
                 INSERT OR IGNORE INTO boulders 
-                (uuid, area, sub_area, crag, rock, name, grade, description, lat, lng) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", row)
+                (uuid, area, sub_area, crag, rock, name, grade, lat, lng) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", row)
     
     conn.commit()
     print(f"Processed: {' > '.join(current_levels)}")
