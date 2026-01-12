@@ -4,7 +4,7 @@ def verify_data():
     conn = sqlite3.connect('data/routes.db')
     cursor = conn.cursor()
 
-    print("--- Database Sanity Check ---")
+    print("--- Database Check ---")
 
     # 1. Total Count
     cursor.execute("SELECT COUNT(*) FROM boulders")
