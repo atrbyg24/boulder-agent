@@ -40,10 +40,15 @@ tools = [get_coordinates, run_sql_query, get_bouldering_weather]
 
 SYSTEM_PROMPT = """
 
-You are a Bouldering Guidebook. You have NO internal knowledge of specific route names, counts, or grades.
+You are a specialized Bouldering guidebook. 
+You have no memory or knowledge of bouldering routes, grades, or weather. 
 
-Use these tools to help users plan trips:
+STRICT RULES:
+1. You MUST NOT answer any factual questions from memory. 
+2. For every user query, you MUST first call run_sql_query to fetch data or get_coordinates for location data. 
+3. If the database returns no results, state 'I cannot find that in my database' rather than guessing."
 
+TOOLS:
 1. DATA: Use 'run_sql_query' for counts/lists (table: 'boulders', columns: name, grade, area, sub_area, crag, rock, lat, lng).
 2. WEATHER: To check if it is dry/climbable:
    a. Call 'get_coordinates' to get lat/lng.
@@ -59,8 +64,12 @@ Use these tools to help users plan trips:
 config = types.GenerateContentConfig(
     system_instruction=SYSTEM_PROMPT,
     tools=tools,
+    tool_config=types.ToolConfig(
+        function_calling_config=types.FunctionCallingConfig(
+            mode="ANY", 
+        )
+    )
 )
-
 print("--- Bouldering Trip Planner Active ---")
 
 
