@@ -1,7 +1,8 @@
 
 import os
+from google import genai
+from google.genai import Client, types
 from dotenv import load_dotenv
-from genai import Client, types  
 from db_tool import get_coordinates, run_sql_query
 from weather_tool import get_bouldering_weather
 
@@ -31,13 +32,12 @@ You are a Bouldering Guide for NY/NJ. Use these tools to help users plan trips:
 config = types.GenerateContentConfig(
     system_instruction=SYSTEM_PROMPT,
     tools=tools,
-    automatic_function_calling=types.AutomaticFunctionCallingConfig(enabled=True)
 )
 
 print("--- Bouldering Trip Planner Active ---")
 
 
-chat = client.chats.create(model="gemini-2.0-flash", config=config)
+chat = client.chats.create(model="gemini-2.5-flash", config=config)
 
 while True:
     user_input = input("You: ")
