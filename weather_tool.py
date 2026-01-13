@@ -64,6 +64,10 @@ def get_bouldering_weather(lat: float, lng: float, date_str: str = None):
     day_codes = hourly.get('weather_code', [])[sunrise.hour:sunset.hour]
     day_humidity = hourly.get('relative_humidity_2m', [])[sunrise.hour:sunset.hour]
 
+    max_day_temp = max(day_temps) if day_temps else 0
+    min_day_temp = min(day_temps) if day_temps else 0
+    max_humidity = max(day_humidity) if day_humidity else 0
+
     # WMO Codes 71-77: Snow | 85-86: Snow showers | 96-99: Hail/Thunderstorms
     hazard_codes = [71, 73, 75, 77, 85, 86, 96, 99]
     has_hazard = any(code in hazard_codes for code in day_codes)
@@ -81,9 +85,15 @@ def get_bouldering_weather(lat: float, lng: float, date_str: str = None):
     if has_hazard:
         status = "Red"
         reasons.append("Severe Hazard: Snow, Hail, or Storms forecasted.")
-    elif max(day_humidity) > 85:
+    if max_humidity > 60:
         status = "Yellow"
-        reasons.append("High Humidity: Rock may feel 'greasy' or take longer to dry.")
+        reasons.append(f"High Humidity: Humidity of {max_humidity} may impact friction.")
+    if max_day_temp > 80:
+        status = "Yellow"
+        reasons.append(f"Sub-optimal Temps: High of {max_day_temp}°F is a bit warm/greasy.")
+    if min_day_temp < 32:
+        status = "Yellow"
+        reasons.append(f"Sub-optimal Temps: Low of {min_day_temp}°F is quite cold.")
 
     return {
         "status": status,
