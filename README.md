@@ -7,7 +7,7 @@
 * **Weather Forensics**: Automatically checks 48-hour precipitation history and "Send Temps" (35°F - 60°F) for specific GPS coordinates.
 * **Function Calling**: Powered by Gemini 2.5 Flash, the agent intelligently decides when to query the SQL database or check the weather API.
 * **Safety Logic**: Uses a "Green/Yellow/Red" status system to warn users about wet rock or dangerous conditions.
-* **Observability**: Built-in tracing to monitor AI "Chain of Thought" and tool-calling accuracy.
+* **Interactive Chat**: A persistent web interface built with Streamlit.
 
 ## 🛠 Tech Stack
 * **AI Model**: Google Gemini (via the `google-genai` SDK)
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 ### 2. Environment Setup
 
-Create a `.env` file in the root directory. Do not commit this file to GitHub.
+Create a `.streamlit/secrets.toml` file in the root directory. Do not commit this file to GitHub.
 
 ```plaintext
 GEMINI_API_KEY=your_api_key_here
@@ -37,7 +37,7 @@ GEMINI_API_KEY=your_api_key_here
 ### 3. Run the Agent
 
 ```bash
-python main.py
+streamlit run app.py
 ```
 
 ## 📊 Data Sources & Credits
