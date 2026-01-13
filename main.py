@@ -1,11 +1,34 @@
 
 import os
 import time
+import json
+import datetime
 from google.api_core import exceptions
 from google.genai import Client, types
 from dotenv import load_dotenv
 from db_tool import get_coordinates, run_sql_query
 from weather_tool import get_bouldering_weather
+
+
+def log_trace(user_input, response):
+    """Saves the AI's thought process and tool calls to a local file."""
+    trace_entry = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "user_query": user_input,
+        "tool_calls": [],
+        "final_answer": response.text
+    }
+    
+    # Extract function calls from the response object
+    for part in response.candidates[0].content.parts:
+        if part.function_call:
+            trace_entry["tool_calls"].append({
+                "function": part.function_call.name,
+                "args": part.function_call.args
+            })
+            
+    with open("traces.jsonl", "a") as f:
+        f.write(json.dumps(trace_entry) + "\n")
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
@@ -16,7 +39,10 @@ tools = [get_coordinates, run_sql_query, get_bouldering_weather]
 
 
 SYSTEM_PROMPT = """
-You are a Bouldering Guide for NY/NJ. Use these tools to help users plan trips:
+
+You are a Bouldering Guidebook. You have NO internal knowledge of specific route names, counts, or grades.
+
+Use these tools to help users plan trips:
 
 1. DATA: Use 'run_sql_query' for counts/lists (table: 'boulders', columns: name, grade, area, sub_area, crag, rock, lat, lng).
 2. WEATHER: To check if it is dry/climbable:
@@ -47,6 +73,7 @@ while True:
     for attempt in range(3):
         try:
             response = chat.send_message(user_input)
+            log_trace(user_input, response)
             print(f"Agent: {response.text}")
             break 
         except exceptions.ResourceExhausted:
