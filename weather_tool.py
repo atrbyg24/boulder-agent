@@ -21,9 +21,8 @@ def get_bouldering_weather(lat: float, lng: float, date_str: str = None):
     """
     
     # Calculate the 48-hour 'Lookback' period to check if the rock is currently soaked.
-    now = datetime.now()
-    target_date = datetime.strptime(date_str, '%Y-%m-%d') if date_str else now
-    history_end = now.date()
+    target_date = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.now()
+    history_end = target_date.date()
     history_start = history_end - timedelta(days=2)
 
     # Most bouldering areas require at least 24-48 hours to dry after > 0.1" of rain.
