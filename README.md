@@ -11,35 +11,40 @@
 
 ## 🛠 Tech Stack
 * **AI Model**: Google Gemini (via the `google-genai` SDK)
-* **Database**: SQLite (Climbing data provided by **OpenBeta**)
-* **Weather API**: **Open-Meteo** (Historical and Forecast data)
+* **Database**: SQLite (Climbing data provided by [OpenBeta](https://openbeta.io))
+* **Weather API**: [Open-Meteo](https://open-meteo.com) (Historical and Forecast data)
 * **Environment**: Python 3.12+
 
 ## 🚀 Getting Started
 
 ### 1. Clone & Install
 ```bash
-git clone [https://github.com/atrbyg24/boulder-agent.git](https://github.com/atrbyg24/boulder-agent.git)
+git clone https://github.com/atrbyg24/boulder-agent.git
 cd boulder-agent
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-2. Environment Setup
+```
 
-Create a .env file in the root directory. Do not commit this file to GitHub.
+### 2. Environment Setup
 
-Plaintext
+Create a `.env` file in the root directory. Do not commit this file to GitHub.
+
+```plaintext
 GEMINI_API_KEY=your_api_key_here
-3. Run the Agent
+```
 
-Bash
+### 3. Run the Agent
+
+```bash
 python main.py
-📊 Data Sources & Credits
+```
+
+## 📊 Data Sources & Credits
 This project would not be possible without the following open-data providers:
 
-OpenBeta: For providing the comprehensive, open-source climbing dataset (routes, grades, and coordinates).
-
-Open-Meteo: For the high-resolution weather API that allows for historical precipitation and hourly forecast lookups without an API key for non-commercial use.
+* **[OpenBeta](https://openbeta.io)**: For providing the comprehensive, open-source climbing dataset (routes, grades, and coordinates).
+* **[Open-Meteo](https://open-meteo.com)**: For the high-resolution weather API that allows for historical precipitation and hourly forecast lookups without an API key for non-commercial use.
 
 ## ⚠️ Disclaimer
 
