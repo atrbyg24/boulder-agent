@@ -52,7 +52,10 @@ def get_coordinates(location_name: str, location_type: str | None = "rock", pare
 def run_sql_query(sql_query: str) -> list:
     """
     Executes a read-only SQL query against the boulders database.
-    Use this to answer questions about counts, grades, and location lists.
+    Use the 'boulders' table 
+    (columns: name, grade, area, sub_area, crag, rock, lat, lng) 
+    to generate the correct SQL string and
+    answer questions about counts, grades, and location lists.
 
     Args:
         sql_query (str): A valid SQLite SELECT statement.
