@@ -1,6 +1,7 @@
 
 import os
-from google import genai
+import time
+from google.api_core import exceptions
 from google.genai import Client, types
 from dotenv import load_dotenv
 from db_tool import get_coordinates, run_sql_query
@@ -43,6 +44,14 @@ while True:
     user_input = input("You: ")
     if user_input.lower() in ["exit", "quit"]:
         break
-        
-    response = chat.send_message(user_input)
-    print(f"Agent: {response.text}")
+    for attempt in range(3):
+        try:
+            response = chat.send_message(user_input)
+            print(f"Agent: {response.text}")
+            break 
+        except exceptions.ResourceExhausted:
+            print(f"  [Quota hit] Waiting {2**attempt}s to retry...")
+            time.sleep(2**attempt + 1)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            break    
