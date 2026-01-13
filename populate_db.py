@@ -20,7 +20,7 @@ query GetArea($id: ID!) {
 }
 """
 
-def ingest_node(area_id, levels, conn, p_lat=None, p_lng=None):
+def ingest_node(area_id: str, levels: list[str], conn: sqlite3.Connection, p_lat: float = None, p_lng: float = None):
     response = requests.post(URL, json={'query': QUERY, 'variables': {'id': area_id}})
     data = response.json().get('data', {}).get('area', {})
     if not data:
