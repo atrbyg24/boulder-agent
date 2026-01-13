@@ -30,7 +30,7 @@ def verify_data():
     cursor.execute("""
         SELECT name, sub_area, crag, rock, grade, description,lat, lng 
         FROM boulders 
-        WHERE area = 'Powerlinez' 
+        WHERE area = 'Gunks' 
         LIMIT 5
     """)
     for row in cursor.fetchall():
