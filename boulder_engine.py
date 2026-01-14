@@ -1,10 +1,5 @@
-
-import os
-import time
 import streamlit as st
-from google.api_core import exceptions
 from google.genai import Client, types
-from dotenv import load_dotenv
 from db_tool import get_coordinates, run_sql_query
 from weather_tool import get_bouldering_weather
 
@@ -33,10 +28,10 @@ TOOLS:
 @st.cache_resource
 def get_agent_instance():
     """Initializes the model once and keeps it in memory."""
-    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+    client = Client(api_key=st.secrets["GEMINI_API_KEY"])
     model_id = "gemini-2.5-flash-lite" 
     
-    tools = [run_sql_query, get_bouldering_weather]
+    tools = [run_sql_query, get_coordinates, get_bouldering_weather]
     
     chat = client.chats.create(
         model=model_id,
