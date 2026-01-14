@@ -36,6 +36,13 @@ def ingest_node(area_id: str, levels: list[str], conn: sqlite3.Connection, p_lat
     current_levels = levels + [current_name]
     
     cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO areas (uuid, name, lat, lng, parent_name)
+        VALUES (?, ?, ?, ?, ?)""", 
+        (area_id, current_name, current_lat, current_lng, levels[-1] if levels else None)
+    )
+
     for climb in data.get('climbs', []):
         if climb['type']['bouldering']:
             grade = climb['grades']['vscale']
@@ -67,6 +74,9 @@ def ingest_node(area_id: str, levels: list[str], conn: sqlite3.Connection, p_lat
 
 if __name__ == "__main__":
     conn = sqlite3.connect('data/routes.db')
+
+    conn.execute('''CREATE TABLE IF NOT EXISTS areas 
+                   (uuid TEXT PRIMARY KEY, name TEXT, lat REAL, lng REAL, parent_name TEXT)''')
     
     conn.execute('''CREATE TABLE IF NOT EXISTS boulders 
                    (uuid TEXT PRIMARY KEY, area TEXT, sub_area TEXT, crag TEXT, 
