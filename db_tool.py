@@ -2,60 +2,96 @@ import sqlite3
 
 DB_PATH = 'data/routes.db'
 
-def get_coordinates(location_name: str, location_type: str | None = "rock", parent_area: str | None = None) -> dict | None:
+def get_coordinates(location_name: str, location_type: str | None = None, parent_area: str | None = None) -> dict | None:
     """
     Retrieves the latitude and longitude for a specific location.
 
-    This function searches for coordinates involves checking for duplicate names
-    and providing disambiguation options if necessary.
+    This function searches for coordinates in the 'areas' and 'boulders' tables.
+    It supports filtering by location type and handles ambiguity by returning a list of options
+    if multiple matches are found (unless a unique Area match is found first).
 
     Args:
         location_name: The name of the rock, climb, or location to search for.
-        location_type: The column to search against (e.g., 'rock', 'name'). Defaults to "rock".
+        location_type: Optional filter. If "area", searches only areas.
+                       If "rock", "boulder", or "climb", searches only boulders.
+                       Defaults to None (searches both).
         parent_area: An optional filter (e.g., 'Peterskill') used to narrow down results
                      and resolve naming conflicts.
 
     Returns:
-        dict: A dictionary containing 'lat' and 'lng' if a unique location is found.
+        dict: A dictionary containing 'lat', 'lng', and 'type' if a unique location is found.
               If multiple matches are found, returns a dictionary with 'ambiguous': True
               and a list of 'options'.
         None: If no matching location is found.
     """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
-    # Base query
-    query = f"SELECT lat, lng, rock, sub_area, area FROM boulders WHERE {location_type} LIKE ?"
-    params = [f"%{location_name}%"]
-    
-    # Add optional parent filtering to resolve duplicates
-    if parent_area:
-        query += " AND (area LIKE ? OR sub_area LIKE ?)"
-        params.extend([f"%{parent_area}%", f"%{parent_area}%"])
-    
-    cursor.execute(query, params)
-    results = cursor.fetchall()
-    conn.close()
-    
-    if len(results) == 1:
-        return {"lat": results[0][0], "lng": results[0][1]}
-    
-    if len(results) > 1:
-        # Return a list of options so the Agent can ask the user for clarification
-        return {
-            "ambiguous": True,
-            "options": [{"rock": r[2], "sub_area": r[3], "area": r[4]} for r in results]
-        }
-        
-    return None
 
+    # Determine what to search based on location_type
+    search_areas = not location_type or location_type.lower() in ["area", "location"]
+    search_boulders = not location_type or location_type.lower() in ["rock", "boulder", "climb", "route", "point"]
+
+    area_results = []
+    if search_areas:
+        area_query = "SELECT lat, lng, name, parent_name FROM areas WHERE name LIKE ?"
+        area_params = [f"%{location_name}%"]
+
+        if parent_area:
+            area_query += " AND parent_name LIKE ?"
+            area_params.append(f"%{parent_area}%")
+
+        cursor.execute(area_query, area_params)
+        area_results = cursor.fetchall()
+
+        if len(area_results) == 1:
+            conn.close()
+            return {"lat": area_results[0][0], "lng": area_results[0][1], "type": "area"}
+
+    boulder_results = []
+    if search_boulders:
+        # This captures specific climbs or rocks if the area search was empty or too broad
+        boulder_query = "SELECT lat, lng, name, area, sub_area FROM boulders WHERE name LIKE ?"
+        boulder_params = [f"%{location_name}%"]
+
+        if parent_area:
+            boulder_query += " AND (area LIKE ? OR sub_area LIKE ?)"
+            boulder_params.extend([f"%{parent_area}%", f"%{parent_area}%"])
+
+        cursor.execute(boulder_query, boulder_params)
+        boulder_results = cursor.fetchall()
+
+    conn.close()
+
+    # Combine results to check for total ambiguity
+    total_matches = area_results + boulder_results
+
+    if not total_matches:
+        return None
+
+    if len(total_matches) == 1:
+        res = boulder_results[0] if boulder_results else area_results[0]
+        return {"lat": res[0], "lng": res[1], "type": "point"}
+
+    options = []
+    for r in area_results:
+        options.append({"name": r[2], "context": r[3], "category": "Area"})
+    for r in boulder_results:
+        options.append({"name": r[2], "context": f"{r[3]} > {r[4]}", "category": "Climb/Rock"})
+
+    return {
+        "ambiguous": True,
+        "options": options
+    }
+
+    
 def run_sql_query(sql_query: str) -> list:
     """
     Executes a read-only SQL query against the boulders database.
-    Use the 'boulders' table 
-    (columns: name, grade, area, sub_area, crag, rock, lat, lng) 
-    to generate the correct SQL string and
-    answer questions about counts, grades, and location lists.
+    The database has two tables:
+    1. 'areas': Use this for general location lookups (e.g., Powerlinez, Gunks, Peterskill).
+       Columns: uuid, name, lat, lng, parent_name
+    2. 'boulders': Use this for specific route info (grades, specific climb names).
+       Columns: uuid, area, sub_area, crag, rock, name, grade, lat, lng
 
     Args:
         sql_query (str): A valid SQLite SELECT statement.
