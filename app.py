@@ -34,6 +34,12 @@ st.markdown('Photo by <a href="https://unsplash.com/@umate?utm_source=unsplash&u
 
 st.set_page_config(page_title="BoulderAgent", page_icon="🧗")
 st.title("🧗 BoulderAgent")
+st.markdown("""
+    **Data Sources:** [OpenBeta](https://openbeta.io) & [Open-Meteo](https://open-meteo.com)
+    
+    *Currently supporting: **The Powerlinez** and **The Gunks***
+""")
+st.divider()
 
 # Manage conversation history in Session State
 if "messages" not in st.session_state:
