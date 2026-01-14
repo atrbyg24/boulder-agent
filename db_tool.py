@@ -97,15 +97,16 @@ def run_sql_query(sql_query: str) -> list:
         sql_query (str): A valid SQLite SELECT statement.
     
     Returns:
-        list: A list of rows (tuples) from the database.
+        list: A list of dictionaries representing the rows from the database.
+              Returns a list containing a dictionary with an "error" key if an exception occurs.
     """
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row 
     cursor = conn.cursor()
     try:
         cursor.execute(sql_query)
-        results = cursor.fetchall()
-        return results
+        return [dict(row) for row in cursor.fetchall()]
     except sqlite3.Error as e:
-        return f"SQL Error: {e}"
+        return [{"error": str(e)}]
     finally:
         conn.close()
