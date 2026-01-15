@@ -1,4 +1,5 @@
 import sqlite3
+import re
 
 DB_PATH = 'data/routes.db'
 
@@ -83,6 +84,30 @@ def get_coordinates(location_name: str, location_type: str | None = None, parent
         "options": options
     }
 
+def normalize_grade(grade_str: str) -> float:
+    """
+    Converts a grade string to a float value.
+    
+    Args:
+        grade_str (str): The grade string to normalize.
+    
+    Returns:
+        float: The normalized grade .
+    """
+    grade = grade_str.upper().strip()
+    if "VB" in grade:
+        return -1.0
+    num = re.findall(r'\d+', grade)
+    if len(num) == 2:
+        return float(num[0]) + float(num[1]) / 2
+    val = float(num[0])
+    if "+" in grade:
+        val += 0.5
+    if "-" in grade:
+        val -= 0.5
+    return val
+
+    
     
 def run_sql_query(sql_query: str) -> list:
     """
