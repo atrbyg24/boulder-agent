@@ -45,7 +45,7 @@ def get_coordinates(location_name: str, location_type: str | None = None, parent
 
         if len(area_results) == 1:
             conn.close()
-            return {"lat": area_results[0][0], "lng": area_results[0][1], "type": "area"}
+            return {"lat": float(area_results[0][0]), "lng": float(area_results[0][1]), "type": "area"}
 
     boulder_results = []
     if search_boulders:
@@ -70,7 +70,7 @@ def get_coordinates(location_name: str, location_type: str | None = None, parent
 
     if len(total_matches) == 1:
         res = boulder_results[0] if boulder_results else area_results[0]
-        return {"lat": res[0], "lng": res[1], "type": "point"}
+        return {"lat": float(res[0]), "lng": float(res[1]), "type": "point"}
 
     options = []
     for r in area_results:
