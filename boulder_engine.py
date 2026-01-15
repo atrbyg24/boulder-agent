@@ -1,3 +1,5 @@
+import datetime
+import json
 import streamlit as st
 from google.genai import Client, types
 from db_tool import get_coordinates, run_sql_query
@@ -37,7 +39,13 @@ def get_agent_instance():
         model=model_id,
         config=types.GenerateContentConfig(
             tools=tools,
-            system_instruction=SYSTEM_PROMPT
+            system_instruction=SYSTEM_PROMPT,
+            tool_config=types.ToolConfig(
+            function_calling_config=types.FunctionCallingConfig(
+            mode="ANY", 
+            allowed_function_names=["run_sql_query", "get_coordinates", "get_bouldering_weather"]
+        )
+    )
         )
     )
     return chat
@@ -49,10 +57,26 @@ def process_query(prompt, status_callback):
     status_callback.write("Querying the boulder-agent...")
     
     response = chat.send_message(prompt)
+
+    trace_entry = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "user_query": prompt,
+        "tool_calls": [],
+        "final_answer": response.text
+    }
     
-    # Track if tools were called for observability
     for part in response.candidates[0].content.parts:
         if part.function_call:
-            status_callback.write(f"Executing tool: {part.function_call.name}")
+            call_data = {
+                "function": part.function_call.name,
+                "args": part.function_call.args
+            }
+            trace_entry["tool_calls"].append(call_data)
+            
+            status_callback.write(f"🛠️ **Calling Tool:** `{call_data['function']}`")
+            status_callback.write(f"Parameters: `{call_data['args']}`")
+
+    with open("traces.jsonl", "a") as f:
+        f.write(json.dumps(trace_entry) + "\n")
             
     return response.text
