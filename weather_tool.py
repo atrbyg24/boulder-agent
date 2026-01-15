@@ -11,6 +11,8 @@ def get_bouldering_weather(lat: float, lng: float, date_str: str = None):
     2. Hazards: Identifies snow, hail, and thunderstorms which are dangerous for outdoor climbing.
     3. Daylight: Filters weather data to only show conditions during actual climbing hours.
 
+    IMPORTANT: get_coordinates must be called first to supply the correct lat and lng for get_bouldering_weather.
+
     Args:
         lat (float): The latitude of the specific crag or rock.
         lng (float): The longitude of the specific crag or rock.

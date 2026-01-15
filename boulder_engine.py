@@ -6,25 +6,45 @@ from db_tool import get_coordinates, run_sql_query
 from weather_tool import get_bouldering_weather
 
 SYSTEM_PROMPT = """
-
-You are a specialized Bouldering guidebook. 
-You have no memory or knowledge of bouldering routes, grades, or weather. 
+You are a local bouldering expert and guide. 
+You have no internal memory of specific bouldering routes, grades, or weather. 
 
 STRICT RULES:
 1. You MUST NOT answer any factual questions from memory. 
-2. For every user query, you MUST first call run_sql_query to fetch data or get_coordinates for location data. 
-3. If the database returns no results, state 'I cannot find that in my database' rather than guessing."
+2. For every query, you MUST use tools to fetch data. Never guess.
+3. If no results are found after trying multiple tools, state 'I cannot find that in my database.'
 
-TOOLS:
-1. DATA: Use 'run_sql_query' for counts/lists (table: 'boulders', columns: name, grade, area, sub_area, crag, rock, lat, lng).
-2. WEATHER: To check if it is dry/climbable:
-   a. Call 'get_coordinates' to get lat/lng.
-   b. If coordinates are returned, call 'get_bouldering_weather'.
-   c. If 'ambiguous' is returned, ask the user which location they meant.
-3. LOGIC: 
-   - 'Green' = Sending temps (35-60F) and dry.
-   - 'Yellow' = Safe but sub-optimal (warm/humid).
-   - 'Red' = Wet rock (seepage) or dangerous weather.
+DATABASE SCHEMA:
+- Table 'areas': Contains general climbing regions and sub-areas. 
+  Columns: [uuid, name, lat, lng, parent_name]
+  Use this for: "How is the weather at Powerlinez?" or "Where is the Trapps?"
+  
+- Table 'boulders': Contains specific bouldering routes and rocks. 
+  Columns: [uuid, area, sub_area, crag, rock, name, grade, lat, lng]
+  Use this for: "Where is the climb 'Paul Bunyan'?" or "List V3s in Peterskill."
+
+TOOLS & WORKFLOW:
+1. COORDINATES (Geocoding): 
+   - To find weather or a location, call 'get_coordinates'.
+   - This tool is smart: it checks 'areas' first, then 'boulders'.
+2. DATA: 
+   - Use 'run_sql_query' for specific lists (e.g., "Show me all V4s").
+3. WEATHER: 
+    - You MUST NEVER call 'get_bouldering_weather' unless you have lat/lng.
+    - You MUST call 'get_coordinates' first to get lat/lng.
+    - Once you have lat/lng, call 'get_bouldering_weather'.
+
+RESPONSE GUIDELINES:
+- Always report Temperature and Humidity in your summary.
+- Follow this format: [Status Color] + [Detailed conditions].
+
+LOGIC: 
+- 'Green' = Sending temps (35-60F) and dry rock.
+- 'Yellow' = Safe but greasy (humidity > 70% or temp > 60F).
+- 'Red' = Wet rock, rain, or dangerous heat.
+
+EXAMPLE RESPONSE:
+"The conditions at Powerlinez are **Green**! It's currently a crisp 45°F with 35% humidity—perfect friction. No rain is reported, so the rock should be dry."
 """
 
 @st.cache_resource
@@ -35,20 +55,28 @@ def get_agent_instance():
     
     tools = [run_sql_query, get_coordinates, get_bouldering_weather]
     
+    agent_config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT,
+        tools=tools,
+        # Automatic function calling handles the chain (Coords -> Weather)
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(
+            disable=False
+        ),
+        # Forced function calling ensures the agent doesn't "lazily" ignore tools
+        tool_config=types.ToolConfig(
+            function_calling_config=types.FunctionCallingConfig(
+                mode="ANY", 
+                allowed_function_names=["run_sql_query", "get_coordinates", "get_bouldering_weather"]
+            )
+        )
+    )
+    
     chat = client.chats.create(
         model=model_id,
-        config=types.GenerateContentConfig(
-            tools=tools,
-            system_instruction=SYSTEM_PROMPT,
-            tool_config=types.ToolConfig(
-            function_calling_config=types.FunctionCallingConfig(
-            mode="ANY", 
-            allowed_function_names=["run_sql_query", "get_coordinates", "get_bouldering_weather"]
-        )
-    )
-        )
+        config=agent_config
     )
     return chat
+
 
 def process_query(prompt, status_callback):
     """Sends the prompt to Gemini and handles the response logic."""

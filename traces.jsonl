@@ -1,0 +1,2 @@
+{"timestamp": "2026-01-15T10:39:32.122041", "user_query": "How's the weather at Powerlinez today?", "tool_calls": [{"function": "get_bouldering_weather", "args": {}}], "final_answer": null}
+{"timestamp": "2026-01-15T10:42:34.499617", "user_query": "How's the weather at PowerLinez today>", "tool_calls": [{"function": "get_bouldering_weather", "args": {}}], "final_answer": null}
