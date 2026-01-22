@@ -32,12 +32,21 @@ page_bg_img = f'''
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.title("🧗 BoulderAgent")
-st.markdown("""
-    **Data Sources:** [OpenBeta](https://openbeta.io) & [Open-Meteo](https://open-meteo.com)
+
+with st.sidebar:
+    st.markdown("""
+        **Data Sources:** [OpenBeta](https://openbeta.io) & [Open-Meteo](https://open-meteo.com)
+        
+        *Currently supporting: **The Powerlinez** and **The Gunks***
+    """)
+    st.markdown('Photo by <a href="https://unsplash.com/@umate?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Art Litvinau</a> on <a href="https://unsplash.com/photos/a-large-rock-formation-in-the-middle-of-a-desert-F6-HLw_R7t4?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>', unsafe_allow_html=True)
     
-    *Currently supporting: **The Powerlinez** and **The Gunks***
-""")
-st.markdown('Photo by <a href="https://unsplash.com/@umate?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Art Litvinau</a> on <a href="https://unsplash.com/photos/a-large-rock-formation-in-the-middle-of-a-desert-F6-HLw_R7t4?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>', unsafe_allow_html=True)
+    st.divider()
+    
+    if st.button("Clear Conversation"):
+        st.session_state.messages = []
+        st.rerun()
+
 st.divider()
 
 # Manage conversation history in Session State
@@ -49,16 +58,29 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# User input
-if prompt := st.chat_input("How's the weather at Powerlinez?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# Suggested Queries
+if not st.session_state.messages:
+    st.markdown("### Suggested Queries")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🌦️ Weather at The Gunks?"):
+            st.session_state.messages.append({"role": "user", "content": "How is the weather at The Gunks?"})
+            st.rerun()
+    with col2:
+        if st.button("🪨 Boulders in Powerlinez V3-V5"):
+            st.session_state.messages.append({"role": "user", "content": "Find me boulders in Powerlinez rated V3-V5"})
+            st.rerun()
 
+# User input
+if prompt := st.chat_input("Ask a question about bouldering..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.rerun()
+
+# Generate response if last message is from user
+if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant"):
-        # The 'status' block is where we see the tool calls live
         with st.status("Thinking...", expanded=True) as status:
-            full_response = process_query(prompt, status)
+            full_response = process_query(st.session_state.messages[-1]["content"], status)
             status.update(label="Response generated!", state="complete", expanded=False)
         
         st.markdown(full_response)

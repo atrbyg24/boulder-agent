@@ -89,32 +89,42 @@ def get_chat_session():
 
 
 def process_query(prompt, status_callback):
-    """Sends the prompt to Gemini and handles the response logic."""
     chat = get_chat_session()
-    
     status_callback.write("Querying the boulder-agent...")
     
     response = chat.send_message(prompt)
 
-    trace_entry = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "user_query": prompt,
-        "tool_calls": [],
-        "final_answer": response.text
-    }
-    
+    # 1. Manually find the text part if response.text is failing us
+    final_answer = None
+    tool_calls_found = []
+
+    # Iterate through all parts of the response
     for part in response.candidates[0].content.parts:
+        if part.text:
+            final_answer = part.text
         if part.function_call:
             call_data = {
                 "function": part.function_call.name,
-                "args": part.function_call.args
+                "args": dict(part.function_call.args)
             }
-            trace_entry["tool_calls"].append(call_data)
-            
-            status_callback.write(f"🛠️ **Calling Tool:** `{call_data['function']}`")
-            status_callback.write(f"Parameters: `{call_data['args']}`")
+            tool_calls_found.append(call_data)
+            status_callback.write(f"🛠️ **Tool Used:** `{call_data['function']}`")
+
+    # 2. Safety fallback: If final_answer is STILL null, the model didn't summarize
+    if not final_answer:
+        if tool_calls_found:
+            final_answer = "I called the database, but I didn't get enough information to provide a summary."
+        else:
+            final_answer = "I'm sorry, I couldn't process that request."
+
+    trace_entry = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "user_query": prompt,
+        "tool_calls": tool_calls_found,
+        "final_answer": final_answer
+    }
 
     with open("traces.jsonl", "a") as f:
         f.write(json.dumps(trace_entry) + "\n")
             
-    return response.text
+    return final_answer
