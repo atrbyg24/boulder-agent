@@ -106,10 +106,9 @@ def normalize_grade(grade_str: str) -> float:
     if "-" in grade:
         val -= 0.5
     return val
-
     
     
-def run_sql_query(sql_query: str) -> list:
+def run_sql_query(sql_query: str, params: list | tuple | None = None) -> list:
     """
     Executes a read-only SQL query against the boulders database.
     The database has two tables:
@@ -118,18 +117,38 @@ def run_sql_query(sql_query: str) -> list:
     2. 'boulders': Use this for specific route info (grades, specific climb names).
        Columns: uuid, area, sub_area, crag, rock, name, grade, lat, lng
 
+    This function supports parameterized queries to prevent SQL injection.
+    It also registers a custom SQLite function `normalize_grade(grade_str)` which returns a float.
+    You can use this function in your SQL queries to filter by grade range.
+    Example: `SELECT * FROM boulders WHERE normalize_grade(grade) BETWEEN ? AND ?`
+
     Args:
-        sql_query (str): A valid SQLite SELECT statement.
+        sql_query (str): A valid SQLite SELECT statement. Use '?' as placeholders for parameters.
+        params (list | tuple | None): A list or tuple of parameters to substitute into the query.
     
     Returns:
         list: A list of dictionaries representing the rows from the database.
               Returns a list containing a dictionary with an "error" key if an exception occurs.
     """
-    conn = sqlite3.connect(DB_PATH)
+    
+    # Connect in read-only mode using URI
+    # This strictly prevents DROP TABLE, INSERT, UPDATE, DELETE
+    try:
+        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    except sqlite3.Error as e:
+        return [{"error": f"Connection failed: {e}"}]
+
     conn.row_factory = sqlite3.Row 
+    
+    # Register the custom function (name, num_params, func)
+    conn.create_function("normalize_grade", 1, normalize_grade)
+    
     cursor = conn.cursor()
     try:
-        cursor.execute(sql_query)
+        if params:
+            cursor.execute(sql_query, params)
+        else:
+            cursor.execute(sql_query)
         return [dict(row) for row in cursor.fetchall()]
     except sqlite3.Error as e:
         return [{"error": str(e)}]

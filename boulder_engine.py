@@ -29,6 +29,10 @@ TOOLS & WORKFLOW:
    - This tool is smart: it checks 'areas' first, then 'boulders'.
 2. DATA: 
    - Use 'run_sql_query' for specific lists (e.g., "Show me all V4s").
+   - SECURITY: You MUST use parameterized queries for any user input. 
+     Example: `run_sql_query("SELECT * FROM boulders WHERE name = ?", ["Paul Bunyan"])`
+   - GRADES: Use the custom `normalize_grade(grade)` function to search ranges.
+     Example: `run_sql_query("SELECT * FROM boulders WHERE normalize_grade(grade) BETWEEN ? AND ?", [3.0, 5.0])`
 3. WEATHER: 
     - You MUST NEVER call 'get_bouldering_weather' unless you have lat/lng.
     - You MUST call 'get_coordinates' first to get lat/lng.

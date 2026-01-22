@@ -1,5 +1,6 @@
 import sqlite3
 import requests
+from db_tool import normalize_grade
 
 # The endpoint and query we've built
 URL = "https://api.openbeta.io"
