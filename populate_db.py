@@ -85,6 +85,7 @@ if __name__ == "__main__":
                     lat REAL, lng REAL)''')
 
     # Format: (Target UUID, Starting Hierarchy List)
+    # Use OpenBeta url to get uuid for desired location
     locations = [
         ("92aa8885-6ff6-5eaf-bb8c-b93b1f257082", ["Powerlinez"]), # Powerlinez Bouldering
         ("ac0a626a-495a-57b9-99f0-b9a0687b3f97", ["Gunks"]), # Trapps Bouldering
