@@ -59,6 +59,7 @@ def get_client():
 @st.cache_resource
 def get_chat_session():
     """Initializes the model once and keeps it in memory."""
+    # Force cache invalidation
     client = get_client()
     model_id = "gemini-2.5-flash-lite" 
     

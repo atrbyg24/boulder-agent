@@ -1,5 +1,6 @@
 import sqlite3
 import re
+from typing import List, Dict, Optional
 
 DB_PATH = 'data/routes.db'
 
@@ -108,7 +109,7 @@ def normalize_grade(grade_str: str) -> float:
     return val
     
     
-def run_sql_query(sql_query: str, params: list | tuple | None = None) -> list:
+def run_sql_query(sql_query: str, params: list[str] = []) -> list:
     """
     Executes a read-only SQL query against the boulders database.
     The database has two tables:
@@ -124,7 +125,7 @@ def run_sql_query(sql_query: str, params: list | tuple | None = None) -> list:
 
     Args:
         sql_query (str): A valid SQLite SELECT statement. Use '?' as placeholders for parameters.
-        params (list | tuple | None): A list or tuple of parameters to substitute into the query.
+        params (list[str]): A list of parameters to substitute into the query. Defaults to empty list.
     
     Returns:
         list: A list of dictionaries representing the rows from the database.
