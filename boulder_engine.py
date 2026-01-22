@@ -52,9 +52,14 @@ EXAMPLE RESPONSE:
 """
 
 @st.cache_resource
-def get_agent_instance():
+def get_client():
+    return Client(api_key=st.secrets["GEMINI_API_KEY"])
+
+
+@st.cache_resource
+def get_chat_session():
     """Initializes the model once and keeps it in memory."""
-    client = Client(api_key=st.secrets["GEMINI_API_KEY"])
+    client = get_client()
     model_id = "gemini-2.5-flash-lite" 
     
     tools = [run_sql_query, get_coordinates, get_bouldering_weather]
@@ -84,7 +89,7 @@ def get_agent_instance():
 
 def process_query(prompt, status_callback):
     """Sends the prompt to Gemini and handles the response logic."""
-    chat = get_agent_instance()
+    chat = get_chat_session()
     
     status_callback.write("Querying the boulder-agent...")
     
