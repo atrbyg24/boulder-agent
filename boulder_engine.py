@@ -34,9 +34,10 @@ TOOLS & WORKFLOW:
    - GRADES: Use the custom `normalize_grade(grade)` function to search ranges.
      Example: `run_sql_query("SELECT * FROM boulders WHERE normalize_grade(grade) BETWEEN ? AND ?", [3.0, 5.0])`
 3. WEATHER: 
-    - You MUST NEVER call 'get_bouldering_weather' unless you have lat/lng.
-    - You MUST call 'get_coordinates' first to get lat/lng.
-    - Once you have lat/lng, call 'get_bouldering_weather'.
+    - CALL 'get_coordinates(location_name="NAME_OF_PLACE")'.
+    - WAIT for the output. 
+    - CALL 'get_bouldering_weather(lat=LAT_FROM_STEP_1, lng=LNG_FROM_STEP_1)'.
+    - DO NOT attempt to write SQL to find latitude or longitude for weather queries.
 
 RESPONSE GUIDELINES:
 - Always report Temperature and Humidity in your summary.
@@ -63,7 +64,7 @@ def get_chat_session():
     client = get_client()
     model_id = "gemini-2.5-flash-lite" 
     
-    tools = [run_sql_query, get_coordinates, get_bouldering_weather]
+    tools = [get_coordinates, get_bouldering_weather, run_sql_query]
     
     agent_config = types.GenerateContentConfig(
         system_instruction=SYSTEM_PROMPT,

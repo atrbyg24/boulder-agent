@@ -7,6 +7,8 @@ DB_PATH = 'data/routes.db'
 def get_coordinates(location_name: str, location_type: str | None = None, parent_area: str | None = None) -> dict | None:
     """
     Retrieves the latitude and longitude for a specific location.
+    Always use this tool FIRST for weather queries or to find where a place is. 
+    It is more accurate than manual SQL queries.
 
     This function searches for coordinates in the 'areas' and 'boulders' tables.
     It supports filtering by location type and handles ambiguity by returning a list of options
@@ -122,6 +124,9 @@ def run_sql_query(sql_query: str, params: list[str] = []) -> list:
     It also registers a custom SQLite function `normalize_grade(grade_str)` which returns a float.
     You can use this function in your SQL queries to filter by grade range.
     Example: `SELECT * FROM boulders WHERE normalize_grade(grade) BETWEEN ? AND ?`
+    STRICT RESTRICTION: Do NOT use this tool to find latitude, longitude, 
+    or location data for weather requests. Use 'get_coordinates' instead.
+    Failure to follow this results in incorrect data.
 
     Args:
         sql_query (str): A valid SQLite SELECT statement. Use '?' as placeholders for parameters.
