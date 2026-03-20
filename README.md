@@ -2,6 +2,8 @@
 
 **BoulderAgent** is an intelligent assistant designed to help climbers plan their outdoor sessions (currently focused on the Powerlinez and the Gunks). It combines a local climbing database with real-time weather forensics to answer the questions such as: *"Is it dry enough to send?"* or *"What grade is Oliphant Crack?"*
 
+Try it out at https://atrbyg24-boulder-agent-app-dogq4m.streamlit.app/
+
 ## ✨ Features
 * **Natural Language Database Queries**: Ask questions like *"How many V3s are at the Welcome Boulders?"* 
 * **Weather Forensics**: Automatically checks 48-hour precipitation history and "Send Temps" (35°F - 60°F) for specific GPS coordinates.

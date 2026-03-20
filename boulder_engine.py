@@ -93,28 +93,38 @@ def process_query(prompt, status_callback):
     chat = get_chat_session()
     status_callback.write("Querying the boulder-agent...")
     
-    response = chat.send_message(prompt)
+    try:
+        response = chat.send_message(prompt)
+    except Exception as e:
+        return f"An error occurred during the API call: {e}"
 
-    # 1. Manually find the text part if response.text is failing us
-    final_answer = None
+    if not response.candidates or response.candidates[0].content is None:
+        finish_reason = response.candidates[0].finish_reason if response.candidates else "UNKNOWN"
+        return f"I couldn't generate a response. (Reason: {finish_reason})"
+
+    final_answer = ""
     tool_calls_found = []
 
-    # Iterate through all parts of the response
     for part in response.candidates[0].content.parts:
         if part.text:
-            final_answer = part.text
-        if part.function_call:
-            call_data = {
-                "function": part.function_call.name,
-                "args": dict(part.function_call.args)
-            }
-            tool_calls_found.append(call_data)
-            status_callback.write(f"🛠️ **Tool Used:** `{call_data['function']}`")
+            final_answer += part.text
 
-    # 2. Safety fallback: If final_answer is STILL null, the model didn't summarize
-    if not final_answer:
+    # The record of these calls is in the history, not necessarily the final response.
+    # We look at the very last few messages in history to find the tool usage for this specific turn.
+    for message in chat._history[-4:]:  # Look at the most recent turns
+        if message.role == "model":
+            for part in message.parts:
+                if part.function_call:
+                    call_data = {
+                        "function": part.function_call.name,
+                        "args": dict(part.function_call.args)
+                    }
+                    tool_calls_found.append(call_data)
+                    status_callback.write(f"🛠️ **Tool Used:** `{call_data['function']}`")
+
+    if not final_answer.strip():
         if tool_calls_found:
-            final_answer = "I called the database, but I didn't get enough information to provide a summary."
+            final_answer = "I performed the requested lookups, but I couldn't synthesize a summary. Please try rephrasing."
         else:
             final_answer = "I'm sorry, I couldn't process that request."
 
